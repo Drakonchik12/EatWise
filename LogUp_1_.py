@@ -12,7 +12,7 @@ users_collection = db["users"]
 
 def on_login():
     root.destroy()
-    subprocess.run(["python", "Log_in.py"])
+    subprocess.run(["python", "LogIn.py"])
 
 def on_register():
     # Получение данных из полей ввода
@@ -42,7 +42,7 @@ def on_register():
         writer = csv.writer(file)
         writer.writerow([username, email, password])
     root.destroy()
-    subprocess.run(["python", "Regestration_2_.py"])
+    subprocess.run(["python", "LogUp_2_.py"])
     
 
     # Переход на следующую вкладку

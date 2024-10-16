@@ -4,7 +4,7 @@ from PIL import Image, ImageTk
 import csv
 from pymongo import MongoClient
 import pymongo
-from Calorie_calculation import calculate_calories
+from CalorieCalculation import calculate_calories
 
 
 # MongoDB setup

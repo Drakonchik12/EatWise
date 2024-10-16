@@ -46,7 +46,7 @@ def on_login():
 def on_register():
     # Запуск файла регистрации
     root.destroy()
-    subprocess.run(["python", "Regestration_1_.py"])
+    subprocess.run(["python", "LogUp_1_.py"])
     # Закрытие текущего окна
     
 
