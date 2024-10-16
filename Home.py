@@ -3,6 +3,7 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import calendar
 from datetime import datetime
+import random
 
 class CalendarApp:
     def __init__(self, root):
@@ -11,9 +12,9 @@ class CalendarApp:
         self.root.geometry("1400x700")
         self.root.resizable(False, False)
 
-        # Загрузка фона
-        self.bg_image = Image.open("background.png")  # Загрузка фонового изображения
-        self.bg_image = self.bg_image.resize((1400, 700), Image.ANTIALIAS)
+        # Загрузка фонового изображения
+        self.bg_image = Image.open("background.png")  
+        self.bg_image = self.bg_image.resize((1400, 700), Image.LANCZOS)
         self.bg_photo = ImageTk.PhotoImage(self.bg_image)
 
         # Создание холста для фона
@@ -31,28 +32,69 @@ class CalendarApp:
         self.update_calendar()
 
     def create_widgets(self):
-        # Создаем заголовок для года и месяца
-        self.header = tk.Label(self.root, text="", font=("Arial", 16), bg="#ffcc99")
-        self.header.place(x=600, y=20)
+        # Левый верхний блок для календаря
+        self.calendar_frame = tk.Frame(self.root, bg="white", relief="solid", bd=2)
+        self.calendar_frame.place(x=70, y=50, width=600, height=350)
+
+        # Заголовок для года и месяца
+        self.header = tk.Label(self.calendar_frame, text="", font=("Arial", 16), background="white")
+        self.header.pack(pady=10)
 
         # Кнопки для переключения месяцев
-        self.prev_month_btn = tk.Button(self.root, text="<", command=self.prev_month, width=5, height=2, bg="#ffcc99")
-        self.prev_month_btn.place(x=500, y=20)
+        self.prev_month_btn = tk.Button(self.calendar_frame, text="<", command=self.prev_month, width=5, height=2)
+        self.prev_month_btn.pack(side="left", padx=10)
 
-        self.next_month_btn = tk.Button(self.root, text=">", command=self.next_month, width=5, height=2, bg="#ffcc99")
-        self.next_month_btn.place(x=750, y=20)
+        self.next_month_btn = tk.Button(self.calendar_frame, text=">", command=self.next_month, width=5, height=2)
+        self.next_month_btn.pack(side="right", padx=10)
 
         # Место для календаря
-        self.days_frame = tk.Frame(self.root, bg="white")
-        self.days_frame.place(x=150, y=80, width=1100, height=400)
+        self.days_frame = tk.Frame(self.calendar_frame, bg="white")
+        self.days_frame.pack(pady=10)
 
         # Заголовки дней недели
         days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         for i, day in enumerate(days):
-            tk.Label(self.root, text=day, font=("Arial", 12), bg="white").place(x=160 + i * 150, y=60)
+            tk.Label(self.days_frame, text=day, font=("Arial", 12), bg="white").grid(row=0, column=i)
 
-        # Нижние блоки
-        self.create_bottom_blocks()
+        # Правый верхний блок для текущей даты
+        self.date_frame = tk.Frame(self.root, bg="white", relief="solid", bd=2)
+        self.date_frame.place(x=720, y=50, width=600, height=600)
+
+        tk.Label(self.date_frame, text="Today:", font=("Arial", 14), bg="white").pack(pady=5)
+        self.today_label = tk.Label(self.date_frame, text="", font=("Arial", 14), bg="white")
+        self.today_label.pack(pady=5)
+
+        # Нижний левый блок для совета дня
+        self.advice_frame = tk.Frame(self.root, bg="white", relief="solid", bd=2)
+        self.advice_frame.place(x=370, y=420, width=300, height=230)
+
+        self.advice_label = tk.Label(self.advice_frame, text="Advice of the Day:", font=("Arial", 14), bg="white")
+        self.advice_label.pack(pady=5)
+
+        # Пример случайного совета дня
+        self.advice_text = tk.Label(self.advice_frame, text="", wraplength=550, bg="white")
+        self.advice_text.pack(pady=10)
+        self.generate_advice()
+
+        # Нижний правый блок для кнопок
+        self.action_frame = tk.Frame(self.root, bg="white",relief="solid", bd=2)
+        self.action_frame.place(x=70, y=420, width=300,  height=230)
+
+        btn_add_meal = tk.Button(self.action_frame, text="+ Add Meal", height='3',  bg="lightgreen")
+        btn_add_meal.grid(row=0, column=0, sticky="ew", padx=1, pady=1)
+
+        btn_my_stats = tk.Button(self.action_frame, text="? My Stats", height='3', bg="lightyellow")
+        btn_my_stats.grid(row=1, column=0, sticky="ew", padx=1, pady=1)
+
+        btn_find_food = tk.Button(self.action_frame, text="? Find Food",height='3', bg="lightblue")
+        btn_find_food.grid(row=2, column=0, sticky="ew", padx=1, pady=1)
+
+        btn_chat_advice = tk.Button(self.action_frame, text="? Chat Advice", height='3', bg="lightpink")
+        btn_chat_advice.grid(row=3, column=0, sticky="ew", padx=1, pady=1)
+
+        # Равномерное распределение высоты кнопок
+        self.action_frame.grid_rowconfigure((0, 1, 2, 3), weight=1)
+        self.action_frame.grid_columnconfigure(0, weight=1)   
 
     def update_calendar(self):
         # Очистка предыдущего календаря
@@ -76,7 +118,21 @@ class CalendarApp:
                     # Выделяем текущий день
                     if day == self.today.day and self.year == self.today.year and self.month == self.today.month:
                         day_button.config(bg="lightblue", fg="black")
-                    day_button.grid(row=r, column=c, padx=5, pady=5)
+                    day_button.grid(row=r + 1, column=c, padx=5, pady=5)  # +1 для учета заголовка дней
+
+        # Обновление текущей даты
+        self.today_label.config(text=self.today.strftime("%d %B %Y"))
+
+    def generate_advice(self):
+        # Пример случайных советов
+        advice_list = [
+            "Stay hydrated!",
+            "Eat balanced meals!",
+            "Exercise regularly!",
+            "Get enough sleep!",
+            "Take breaks during work!"
+        ]
+        self.advice_text.config(text=random.choice(advice_list))
 
     def prev_month(self):
         if self.month == 1:
@@ -97,22 +153,6 @@ class CalendarApp:
     def show_day_popup(self, day):
         date_str = f"{day}/{self.month}/{self.year}"
         messagebox.showinfo("Selected Date", f"Hello! You selected the date: {date_str}")
-
-    def create_bottom_blocks(self):
-        # Первый блок с кнопками
-        action_frame = tk.Frame(self.root, bg="white")
-        action_frame.place(x=100, y=500, width=1200, height=80)
-
-        tk.Button(action_frame, text="+ Add Meal", width=15, height=2, bg="lightgreen").place(x=50, y=20)
-        tk.Button(action_frame, text="? My Stats", width=15, height=2, bg="lightyellow").place(x=500, y=20)
-        tk.Button(action_frame, text="? Find Food", width=15, height=2, bg="lightblue").place(x=950, y=20)
-
-        # Второй блок с текущей датой
-        date_frame = tk.Frame(self.root, bg="lightgray", relief="solid", bd=1)
-        date_frame.place(x=100, y=600, width=1200, height=50)
-
-        tk.Label(date_frame, text="Today:", font=("Arial", 12), bg="lightgray").place(x=10, y=10)
-        tk.Label(date_frame, text=self.today.strftime("%d %B %Y"), font=("Arial", 12), bg="lightgray").place(x=100, y=10)
 
 # Запуск приложения
 if __name__ == "__main__":
