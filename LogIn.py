@@ -3,6 +3,8 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 from pymongo import MongoClient
 import subprocess
+import csv
+
 
 # Функция подключения к MongoDB и проверки учетных данных
 def check_credentials(email, password):
@@ -35,9 +37,14 @@ def on_login():
     result = check_credentials(login, password)
     
     if result is True:
-        messagebox.showinfo("Success", "Login successful!")
-        # Запуск другого файла при успешной аутентификации
-        subprocess.run(["python", "another_file.py"])
+        
+        with open('temp.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow([login])
+            
+        root.destroy()    
+        subprocess.run(["python", "Home.py"])
+        
     elif result is False:
         messagebox.showerror("Error", "Invalid password!")
     else:

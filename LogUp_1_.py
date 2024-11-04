@@ -41,6 +41,7 @@ def on_register():
     with open('temp_registration_data.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([username, email, password])
+        
     root.destroy()
     subprocess.run(["python", "LogUp_2_.py"])
     

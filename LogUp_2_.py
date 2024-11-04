@@ -1,10 +1,12 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from PIL import Image, ImageTk
 import csv
 from pymongo import MongoClient
 import pymongo
 from CalorieCalculation import calculate_calories
+import subprocess
+
 
 
 # MongoDB setup
@@ -83,15 +85,25 @@ def on_register():
             "calories": calories,
         }
         collection.insert_one(user_data)
+        
+        with open('temp.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow([username])
 
         messagebox.showinfo("Success", "Data saved to MongoDB!")
+        root.destroy()
+        subprocess.run(["python", "LogIn.py"]) 
     else:
         messagebox.showwarning("Input Error", "Please fill in all fields")
+        
+       
 
 root = tk.Tk()
 root.title("Login Window")
 root.geometry("1400x700")
 root.resizable(False, False)
+
+
 
 vcmd = (root.register(validate_float_input), '%P')
 
@@ -119,56 +131,51 @@ label_us.place(relx=0.5, y=150, anchor="center")
 date_frame = tk.Frame(canvas, bg="#DEE5C3")
 date_frame.place(relx=0.5, y=200, anchor="center")
 
-# Dropdown for Year
+# Combobox for Year
 year_var = tk.StringVar()
-year_var.set("Year")
-year_dropdown = tk.OptionMenu(date_frame, year_var, *years)
-year_dropdown.config(width=8, font=("Arial", 14), bg="#DEE5C3", highlightthickness=0)
-year_dropdown.pack(side="left", padx=5)
+year_combo = ttk.Combobox(date_frame, textvariable=year_var, values=years, font=("Arial", 14), width=8)
+year_combo.set("Year")
+year_combo.pack(side="left", padx=5)
 
-# Dropdown for Month
+# Combobox for Month
 month_var = tk.StringVar()
-month_var.set("Month")
-month_dropdown = tk.OptionMenu(date_frame, month_var, *months)
-month_dropdown.config(width=8, font=("Arial", 14), bg="#DEE5C3", highlightthickness=0)
-month_dropdown.pack(side="left", padx=5)
+month_combo = ttk.Combobox(date_frame, textvariable=month_var, values=months, font=("Arial", 14), width=8)
+month_combo.set("Month")
+month_combo.pack(side="left", padx=5)
 
-# Dropdown for Day
+# Combobox for Day
 day_var = tk.StringVar()
-day_var.set("Day")
-day_dropdown = tk.OptionMenu(date_frame, day_var, *days)
-day_dropdown.config(width=8, font=("Arial", 14), bg="#DEE5C3", highlightthickness=0)
-day_dropdown.pack(side="left", padx=5)
+day_combo = ttk.Combobox(date_frame, textvariable=day_var, values=days, font=("Arial", 14), width=8)
+day_combo.set("Day")
+day_combo.pack(side="left", padx=5)
 
 # Height
 label_post = tk.Label(canvas, text="Height", font=("Arial", 18, "bold"), fg="black", bg="#CFE1B9")
 label_post.place(relx=0.5, y=250, anchor="center")
 entry_post = tk.Entry(canvas, width=35, font=("Arial", 18), fg="black", insertbackground="black", highlightthickness=0, bd=2, validatecommand=vcmd)
-entry_post.place(relx=0.5, y=290, anchor="center" )
+entry_post.place(relx=0.5, y=290, anchor="center")
 
 # Weight
 label_ps = tk.Label(canvas, text="Weight", font=("Arial", 18, "bold"), fg="black", bg="#C0DBB0")
 label_ps.place(relx=0.5, y=340, anchor="center")
 entry_password = tk.Entry(canvas, width=35, font=("Arial", 18), fg="black", insertbackground="black", highlightthickness=0, bd=2, validatecommand=vcmd)
-entry_password.place(relx=0.5, y=380, anchor="center" )
+entry_password.place(relx=0.5, y=380, anchor="center")
 
 # Gender Dropdown
 label_p = tk.Label(canvas, text="Gender", font=("Arial", 18, "bold"), fg="black", bg="#ABD6A8")
 label_p.place(relx=0.5, y=430, anchor="center")
 gender_var = tk.StringVar()
-gender_var.set("Select Gender")
-gender_dropdown = tk.OptionMenu(canvas, gender_var, *genders)
-gender_dropdown.config(width=20, font=("Arial", 14), bg="#ABD6A8", highlightthickness=0)
-gender_dropdown.place(relx=0.5, y=470, anchor="center")
+gender_combo = ttk.Combobox(canvas, textvariable=gender_var, values=genders, font=("Arial", 14), width=20)
+gender_combo.set("Select Gender")
+gender_combo.place(relx=0.5, y=470, anchor="center")
 
-# Type of diet Dropdown
+# Type of Diet Dropdown
 label_ = tk.Label(canvas, text="Type of Diet", font=("Arial", 18, "bold"), fg="black", bg="#99D09F")
 label_.place(relx=0.5, y=520, anchor="center")
 diet_var = tk.StringVar()
-diet_var.set("Select Diet Type")
-diet_dropdown = tk.OptionMenu(canvas, diet_var, *diet_types)
-diet_dropdown.config(width=20, font=("Arial", 14), bg="#99D09F", highlightthickness=0)
-diet_dropdown.place(relx=0.5, y=560, anchor="center")
+diet_combo = ttk.Combobox(canvas, textvariable=diet_var, values=diet_types, font=("Arial", 14), width=20)
+diet_combo.set("Select Diet Type")
+diet_combo.place(relx=0.5, y=560, anchor="center")
 
 # Ready button
 button_login = tk.Button(canvas, text="Ready", width=17, font=("Arial", 16), command=on_register, bg="#0A5381", fg="white", bd=0)

@@ -4,6 +4,20 @@ from PIL import Image, ImageTk
 import calendar
 from datetime import datetime
 import random
+import subprocess
+import csv
+from pymongo import MongoClient
+
+# MongoDB setup
+client = MongoClient("mongodb+srv://ingamatynina392:dracoshaa@cluster0.fgaoh2l.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+db = client["EatWise"]
+addfood_collection = db["addfood"]
+
+def AI_page():
+    subprocess.run(["python", "AI.py"])
+
+def Food_page():
+    subprocess.run(["python", "search_food.py"])
 
 class CalendarApp:
     def __init__(self, root):
@@ -12,125 +26,194 @@ class CalendarApp:
         self.root.geometry("1400x700")
         self.root.resizable(False, False)
 
-        # Загрузка фонового изображения
+        # Load user nickname from temp.csv
+        self.user_nickname = self.load_nickname()
+        
+        # Background image
         self.bg_image = Image.open("background.png")  
         self.bg_image = self.bg_image.resize((1400, 700), Image.LANCZOS)
         self.bg_photo = ImageTk.PhotoImage(self.bg_image)
 
-        # Создание холста для фона
+        # Canvas for background
         self.canvas = tk.Canvas(self.root, width=1400, height=700)
         self.canvas.pack(fill="both", expand=True)
         self.canvas.create_image(0, 0, image=self.bg_photo, anchor="nw")
 
-        # Инициализация текущей даты
+        # Current date initialization
         self.year = datetime.now().year
         self.month = datetime.now().month
         self.today = datetime.now()
-
-        # Основные элементы интерфейса
+        
+        
+        # Main interface components
         self.create_widgets()
+        
         self.update_calendar()
+        
+        # Display food data for today's date when application opens
+        # Automatically display today's food
+
+    def load_nickname(self):
+        with open('temp.csv', newline='') as file:
+            reader = csv.reader(file)
+            user_nickname = next(reader)[0]
+        return user_nickname
 
     def create_widgets(self):
-        # Левый верхний блок для календаря
+        # Calendar frame
         self.calendar_frame = tk.Frame(self.root, bg="white", relief="solid", bd=2)
-        self.calendar_frame.place(x=70, y=50, width=600, height=350)
+        self.calendar_frame.place(x=70, y=50, width=600, height=380)
 
-        # Заголовок для года и месяца
+        # Month and year header
         self.header = tk.Label(self.calendar_frame, text="", font=("Arial", 16), background="white")
         self.header.pack(pady=10)
 
-        # Кнопки для переключения месяцев
+        # Month navigation buttons
         self.prev_month_btn = tk.Button(self.calendar_frame, text="<", command=self.prev_month, width=5, height=2)
         self.prev_month_btn.pack(side="left", padx=10)
-
         self.next_month_btn = tk.Button(self.calendar_frame, text=">", command=self.next_month, width=5, height=2)
         self.next_month_btn.pack(side="right", padx=10)
 
-        # Место для календаря
+        
+
+        # Days of the week header
         self.days_frame = tk.Frame(self.calendar_frame, bg="white")
         self.days_frame.pack(pady=10)
 
-        # Заголовки дней недели
         days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         for i, day in enumerate(days):
             tk.Label(self.days_frame, text=day, font=("Arial", 12), bg="white").grid(row=0, column=i)
 
-        # Правый верхний блок для текущей даты
+        # Right block for today's date and food info
         self.date_frame = tk.Frame(self.root, bg="white", relief="solid", bd=2)
         self.date_frame.place(x=720, y=50, width=600, height=600)
 
-        tk.Label(self.date_frame, text="Today:", font=("Arial", 14), bg="white").pack(pady=5)
+        tk.Label(self.date_frame, text="Day:", font=("Arial", 14), bg="white").pack(pady=5)
         self.today_label = tk.Label(self.date_frame, text="", font=("Arial", 14), bg="white")
         self.today_label.pack(pady=5)
+        
 
-        # Нижний левый блок для совета дня
+        # Food info area with scrollbar
+        self.food_info_label = tk.Label(self.date_frame, text="Food for the Day:", font=("Arial", 14), bg="white")
+        self.food_info_label.pack(pady=5)
+
+        # Canvas for food entries with scrollbar
+        self.food_canvas = tk.Canvas(self.date_frame, bg="white")
+        self.food_canvas.pack(pady=5, fill="both", expand=True)
+
+        # Scrollbar
+        self.food_scrollbar = tk.Scrollbar(self.date_frame, orient="vertical", command=self.food_canvas.yview)
+        self.food_scrollbar.pack(side="right", fill="y")
+
+        # Frame inside canvas to hold the food entries
+        self.food_info_container = tk.Frame(self.food_canvas, bg="white")
+        self.food_info_container.bind(
+            "<Configure>", lambda e: self.food_canvas.configure(scrollregion=self.food_canvas.bbox("all"))
+        )
+        self.food_canvas.create_window((0, 0), window=self.food_info_container, anchor="nw")
+        today_date_str = self.today.strftime("%d/%m/%Y")
+        self.show_food_for_day(today_date_str) 
+        self.food_canvas.configure(yscrollcommand=self.food_scrollbar.set)
+        
+        
+
+        # Lower left block for daily advice
         self.advice_frame = tk.Frame(self.root, bg="white", relief="solid", bd=2)
-        self.advice_frame.place(x=370, y=420, width=300, height=230)
+        self.advice_frame.place(x=370, y=450, width=300, height=200)
 
         self.advice_label = tk.Label(self.advice_frame, text="Advice of the Day:", font=("Arial", 14), bg="white")
         self.advice_label.pack(pady=5)
-
-        # Пример случайного совета дня
-        self.advice_text = tk.Label(self.advice_frame, text="", wraplength=550, bg="white")
-        self.advice_text.pack(pady=10)
+        
+        self.advice_text = tk.Label(self.advice_frame, text="", wraplength=280, bg="white", justify="left")
+        self.advice_text.pack(pady=10, padx=20, fill="both", expand=True)
         self.generate_advice()
 
-        # Нижний правый блок для кнопок
-        self.action_frame = tk.Frame(self.root, bg="white",relief="solid", bd=2)
-        self.action_frame.place(x=70, y=420, width=300,  height=230)
+        # Lower right block for action buttons
+        self.action_frame = tk.Frame(self.root, bg="white", relief="solid", bd=2)
+        self.action_frame.place(x=70, y=450, width=300, height=200)
 
-        btn_add_meal = tk.Button(self.action_frame, text="+ Add Meal", height='3',  bg="lightgreen")
+        btn_add_meal = tk.Button(self.action_frame, text="+ Add Meal", height='3', bg="lightgreen")
         btn_add_meal.grid(row=0, column=0, sticky="ew", padx=1, pady=1)
 
         btn_my_stats = tk.Button(self.action_frame, text="? My Stats", height='3', bg="lightyellow")
         btn_my_stats.grid(row=1, column=0, sticky="ew", padx=1, pady=1)
 
-        btn_find_food = tk.Button(self.action_frame, text="? Find Food",height='3', bg="lightblue")
+        btn_find_food = tk.Button(self.action_frame, text="? Find Food", command=Food_page, height='3', bg="lightblue")
         btn_find_food.grid(row=2, column=0, sticky="ew", padx=1, pady=1)
 
-        btn_chat_advice = tk.Button(self.action_frame, text="? Chat Advice", height='3', bg="lightpink")
+        btn_chat_advice = tk.Button(self.action_frame, text="? Chat Advice", command=AI_page, height='3', bg="lightpink")
         btn_chat_advice.grid(row=3, column=0, sticky="ew", padx=1, pady=1)
 
-        # Равномерное распределение высоты кнопок
         self.action_frame.grid_rowconfigure((0, 1, 2, 3), weight=1)
-        self.action_frame.grid_columnconfigure(0, weight=1)   
+        self.action_frame.grid_columnconfigure(0, weight=1)
 
     def update_calendar(self):
-        # Очистка предыдущего календаря
         for widget in self.days_frame.winfo_children():
             widget.destroy()
 
-        # Обновление заголовка месяца и года
         month_name = calendar.month_name[self.month]
         self.header.config(text=f"{month_name} {self.year}")
 
-        # Получение календаря для указанного месяца и года
         month_calendar = calendar.monthcalendar(self.year, self.month)
         
-        # Отображение календаря
         for r, week in enumerate(month_calendar):
             for c, day in enumerate(week):
                 if day != 0:
                     day_button = tk.Button(self.days_frame, text=str(day), width=5, height=2, relief="groove",
-                                           command=lambda d=day: self.show_day_popup(d))
+                                           command=lambda d=day: self.show_food_for_day(f"{d}/{self.month}/{self.year}"))
                     
-                    # Выделяем текущий день
-                    if day == self.today.day and self.year == self.today.year and self.month == self.today.month:
-                        day_button.config(bg="lightblue", fg="black")
-                    day_button.grid(row=r + 1, column=c, padx=5, pady=5)  # +1 для учета заголовка дней
+                    if (day == self.today.day and 
+                        self.year == self.today.year and 
+                        self.month == self.today.month):
+                        day_button.config(bg="green", fg="white")
+                    day_button.grid(row=r + 1, column=c, padx=5, pady=5)
 
-        # Обновление текущей даты
         self.today_label.config(text=self.today.strftime("%d %B %Y"))
 
+    def show_food_for_day(self, date_str):
+        date_obj = datetime.strptime(date_str, "%d/%m/%Y")
+    # Format the date without leading zeros
+        date_formatted = f"{date_obj.day}/{date_obj.month}/{date_obj.year}"
+        self.today_label.config(text=date_formatted)
+        
+        for widget in self.food_info_container.winfo_children():
+            widget.destroy()
+
+        food_entries = self.get_food_for_day(date_str)
+
+        if food_entries:
+            for entry in food_entries:
+                food_frame = tk.Frame(self.food_info_container, bg="lightgray", bd=2, relief="groove")
+                food_frame.pack(fill="x", pady=5, padx=10)
+
+                product_name_label = tk.Label(food_frame, text=entry["product_name"], font=("Arial", 12, "bold"), bg="lightgray")
+                product_name_label.pack(anchor="w", padx=10, pady=5)
+
+                calorie_label = tk.Label(food_frame, text=f"Calories: {entry['calories']} kcal", bg="lightgray", font=("Arial", 10))
+                calorie_label.pack(anchor="w", padx=10)
+
+                protein_label = tk.Label(food_frame, text=f"Protein: {entry.get('protein', 'N/A')}g", bg="lightgray", font=("Arial", 10))
+                protein_label.pack(anchor="w", padx=10)
+
+                fat_label = tk.Label(food_frame, text=f"Fat: {entry.get('fat', 'N/A')}g", bg="lightgray", font=("Arial", 10))
+                fat_label.pack(anchor="w", padx=10)
+
+                carbs_label = tk.Label(food_frame, text=f"Carbohydrates: {entry.get('carbs', 'N/A')}g", bg="lightgray", font=("Arial", 10))
+                carbs_label.pack(anchor="w", padx=10)
+        else:
+            tk.Label(self.food_info_container, text="No food entries found for this date.", font=("Arial", 12)).pack(pady=20)
+
+    def get_food_for_day(self, date_str):
+        return list(addfood_collection.find({"date": date_str}))
+
     def generate_advice(self):
-        # Пример случайных советов
         advice_list = [
-            "Stay hydrated!",
-            "Eat balanced meals!",
-            "Exercise regularly!",
-            "Get enough sleep!",
-            "Take breaks during work!"
+            "Stay hydrated by drinking enough water.",
+            "Include more fruits and vegetables in your diet.",
+            "Take a walk every day to stay active.",
+            "Make time for relaxation and mental health.",
+            "Avoid processed foods for better health.",
+            "Aim to get enough sleep every night."
         ]
         self.advice_text.config(text=random.choice(advice_list))
 
@@ -150,12 +233,7 @@ class CalendarApp:
             self.month += 1
         self.update_calendar()
 
-    def show_day_popup(self, day):
-        date_str = f"{day}/{self.month}/{self.year}"
-        messagebox.showinfo("Selected Date", f"Hello! You selected the date: {date_str}")
-
-# Запуск приложения
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = CalendarApp(root)
-    root.mainloop()
+# Main application
+root = tk.Tk()
+app = CalendarApp(root)
+root.mainloop()
