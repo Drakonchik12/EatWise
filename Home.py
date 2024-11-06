@@ -132,9 +132,6 @@ class CalendarApp:
         self.action_frame = tk.Frame(self.root, bg="white", relief="solid", bd=2)
         self.action_frame.place(x=70, y=450, width=300, height=200)
 
-        btn_add_meal = tk.Button(self.action_frame, text="+ Add Meal", height='3', bg="lightgreen")
-        btn_add_meal.grid(row=0, column=0, sticky="ew", padx=1, pady=1)
-
         btn_my_stats = tk.Button(self.action_frame, text="? My Stats", height='3', bg="lightyellow")
         btn_my_stats.grid(row=1, column=0, sticky="ew", padx=1, pady=1)
 
@@ -172,9 +169,16 @@ class CalendarApp:
 
     def show_food_for_day(self, date_str):
         date_obj = datetime.strptime(date_str, "%d/%m/%Y")
+        
+        
+            
     # Format the date without leading zeros
         date_formatted = f"{date_obj.day}/{date_obj.month}/{date_obj.year}"
         self.today_label.config(text=date_formatted)
+        
+        with open('temp2.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow([date_formatted])
         
         for widget in self.food_info_container.winfo_children():
             widget.destroy()
