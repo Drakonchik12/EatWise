@@ -11,9 +11,28 @@ def get_user_email_from_csv():
         user_nickname = next(reader)[0]
     return user_nickname
 
+
+def update_email_in_addfood( new_email):
+    client = MongoClient("mongodb+srv://ingamatynina392:dracoshaa@cluster0.fgaoh2l.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+    db = client["EatWise"]
+    addfood_collection = db["addfood"]
+    
+    old_email=get_user_email_from_csv()
+    
+    # Оновлення електронної пошти в усіх документах, де стара пошта
+    result = addfood_collection.update_many(
+        {"user_nickname": old_email},
+        {"$set": {"user_nickname": new_email}}
+    )
+    
+    with open('temp.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([new_email])
+    
 # MongoDB connection
 client = MongoClient("mongodb+srv://ingamatynina392:dracoshaa@cluster0.fgaoh2l.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 db = client["EatWise"]
+addfood_collection = db["addfood"]
 
 # Функция для загрузки информации о пользователе
 def load_user_info():
@@ -92,6 +111,8 @@ def save_user_info():
     # Обновляем данные в базе
     db["users"].update_one({"email": user_email}, {"$set": updated_data})
     
+    new_email = email_entry.get()
+    update_email_in_addfood( new_email)
     # Информируем пользователя о успешном сохранении
     messagebox.showinfo("Success", "User information updated successfully!")
 
