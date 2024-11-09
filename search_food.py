@@ -20,7 +20,6 @@ API_URL = "https://world.openfoodfacts.org/cgi/search.pl"
 def search_food():
     query = entry.get().strip()
     if not query:
-        messagebox.showerror("Input Error", "Please enter a food item to search.")
         return
 
     params = {
@@ -74,7 +73,6 @@ def get_date():
 def add_pfc_calories():
     selected_item = tree.selection()
     if not selected_item:
-        messagebox.showerror("Selection Error", "Please select a product to add.")
         return
 
     item = tree.item(selected_item[0])
@@ -118,7 +116,7 @@ def add_pfc_calories():
         }
         
         collection.insert_one(food_data)
-        messagebox.showinfo("Database Update", "Food information saved successfully.")
+       
         
     except (ValueError, TypeError):
         messagebox.showerror("Input Error", "Please enter a valid number for weight.")
@@ -127,6 +125,7 @@ def add_pfc_calories():
 root = tk.Tk()
 root.title("Food Search App with PFC")
 root.geometry("800x500")
+root.config(bg='#135670')
 
 frame = tk.Frame(root)
 frame.pack(pady=10)

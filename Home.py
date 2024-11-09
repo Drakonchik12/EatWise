@@ -15,6 +15,18 @@ addfood_collection = db["addfood"]
 
 def AI_page():
     subprocess.run(["python", "AI.py"])
+    
+def Account_page():
+    subprocess.run(["python", "Account.py"])
+    
+def Account_edit_page():
+    subprocess.run(["python", "EditAccount.py"])
+    
+def Statistic_page():
+    subprocess.run(["python", "Statistic.py"])
+    
+def Edit_password_page():
+    subprocess.run(["python", "EditPassword.py"])
 
 def Food_page():
     subprocess.run(["python", "search_food.py"])
@@ -44,15 +56,10 @@ class CalendarApp:
         self.month = datetime.now().month
         self.today = datetime.now()
         
-        
         # Main interface components
         self.create_widgets()
-        
         self.update_calendar()
         
-        # Display food data for today's date when application opens
-        # Automatically display today's food
-
     def load_nickname(self):
         with open('temp.csv', newline='') as file:
             reader = csv.reader(file)
@@ -74,8 +81,6 @@ class CalendarApp:
         self.next_month_btn = tk.Button(self.calendar_frame, text=">", command=self.next_month, width=5, height=2)
         self.next_month_btn.pack(side="right", padx=10)
 
-        
-
         # Days of the week header
         self.days_frame = tk.Frame(self.calendar_frame, bg="white")
         self.days_frame.pack(pady=10)
@@ -92,7 +97,6 @@ class CalendarApp:
         self.today_label = tk.Label(self.date_frame, text="", font=("Arial", 14), bg="white")
         self.today_label.pack(pady=5)
         
-
         # Food info area with scrollbar
         self.food_info_label = tk.Label(self.date_frame, text="Food for the Day:", font=("Arial", 14), bg="white")
         self.food_info_label.pack(pady=5)
@@ -111,11 +115,10 @@ class CalendarApp:
             "<Configure>", lambda e: self.food_canvas.configure(scrollregion=self.food_canvas.bbox("all"))
         )
         self.food_canvas.create_window((0, 0), window=self.food_info_container, anchor="nw")
+        
         today_date_str = self.today.strftime("%d/%m/%Y")
         self.show_food_for_day(today_date_str) 
         self.food_canvas.configure(yscrollcommand=self.food_scrollbar.set)
-        
-        
 
         # Lower left block for daily advice
         self.advice_frame = tk.Frame(self.root, bg="white", relief="solid", bd=2)
@@ -131,17 +134,26 @@ class CalendarApp:
         # Lower right block for action buttons
         self.action_frame = tk.Frame(self.root, bg="white", relief="solid", bd=2)
         self.action_frame.place(x=70, y=450, width=300, height=200)
+        
+        btn_my_account = tk.Button(self.action_frame, text="? My Account",command=Account_page, height='2', bg="lightyellow")
+        btn_my_account.grid(row=1, column=0, sticky="ew", padx=1, pady=1)
+        
+        btn_my_account_edit = tk.Button(self.action_frame, text="* Password edit", command=Edit_password_page, height='2', bg="lightblue")
+        btn_my_account_edit.grid(row=2, column=0, sticky="ew", padx=1, pady=1)
+        
+        btn_my_password_edit = tk.Button(self.action_frame, text="* Account edit",command=Account_edit_page, height='2', bg="lightpink")
+        btn_my_password_edit.grid(row=3, column=0, sticky="ew", padx=1, pady=1)
 
-        btn_my_stats = tk.Button(self.action_frame, text="? My Stats", height='3', bg="lightyellow")
-        btn_my_stats.grid(row=1, column=0, sticky="ew", padx=1, pady=1)
+        btn_my_stats = tk.Button(self.action_frame, text="? My Stats",command=Statistic_page, height='2', bg="lightyellow")
+        btn_my_stats.grid(row=4, column=0, sticky="ew", padx=1, pady=1)
 
-        btn_find_food = tk.Button(self.action_frame, text="? Find Food", command=Food_page, height='3', bg="lightblue")
-        btn_find_food.grid(row=2, column=0, sticky="ew", padx=1, pady=1)
+        btn_find_food = tk.Button(self.action_frame, text="+ Find Food", command=Food_page, height='2', bg="lightblue")
+        btn_find_food.grid(row=5, column=0, sticky="ew", padx=1, pady=1)
 
-        btn_chat_advice = tk.Button(self.action_frame, text="? Chat Advice", command=AI_page, height='3', bg="lightpink")
-        btn_chat_advice.grid(row=3, column=0, sticky="ew", padx=1, pady=1)
+        btn_chat_advice = tk.Button(self.action_frame, text="? Chat Advice", command=AI_page, height='2', bg="lightpink")
+        btn_chat_advice.grid(row=6, column=0, sticky="ew", padx=1, pady=1)
 
-        self.action_frame.grid_rowconfigure((0, 1, 2, 3), weight=1)
+        self.action_frame.grid_rowconfigure((0, 1, 2, 3, 4, 5, 6), weight=1)
         self.action_frame.grid_columnconfigure(0, weight=1)
 
     def update_calendar(self):
@@ -166,19 +178,18 @@ class CalendarApp:
                     day_button.grid(row=r + 1, column=c, padx=5, pady=5)
 
         self.today_label.config(text=self.today.strftime("%d %B %Y"))
+        
 
     def show_food_for_day(self, date_str):
+        
+        
         date_obj = datetime.strptime(date_str, "%d/%m/%Y")
-        
-        
-            
-    # Format the date without leading zeros
         date_formatted = f"{date_obj.day}/{date_obj.month}/{date_obj.year}"
         self.today_label.config(text=date_formatted)
         
-        with open('temp2.csv', 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow([date_formatted])
+        with open("temp2.csv", mode="w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile) # Опционально: добавляем заголовок "date"
+            writer.writerow([date_formatted] ) 
         
         for widget in self.food_info_container.winfo_children():
             widget.destroy()
@@ -187,28 +198,39 @@ class CalendarApp:
 
         if food_entries:
             for entry in food_entries:
-                food_frame = tk.Frame(self.food_info_container, bg="lightgray", bd=2, relief="groove")
+                food_frame = tk.Frame(self.food_info_container, bg="lightgray", bd=2,  width=600, relief="groove")
                 food_frame.pack(fill="x", pady=5, padx=10)
 
-                product_name_label = tk.Label(food_frame, text=entry["product_name"], font=("Arial", 12, "bold"), bg="lightgray")
+                product_name_label = tk.Label(food_frame, text=entry["product_name"],  width=55, font=("Arial", 12, "bold"), bg="lightgray")
                 product_name_label.pack(anchor="w", padx=10, pady=5)
 
-                calorie_label = tk.Label(food_frame, text=f"Calories: {entry['calories']} kcal", bg="lightgray", font=("Arial", 10))
+                calorie_label = tk.Label(food_frame, text=f"Calories: {entry['calories']} kcal",  width=55, bg="lightgray", font=("Arial", 10))
                 calorie_label.pack(anchor="w", padx=10)
 
-                protein_label = tk.Label(food_frame, text=f"Protein: {entry.get('protein', 'N/A')}g", bg="lightgray", font=("Arial", 10))
+                protein_label = tk.Label(food_frame, text=f"Protein: {entry.get('protein', 'N/A')}g",   width=55, bg="lightgray", font=("Arial", 10))
                 protein_label.pack(anchor="w", padx=10)
 
-                fat_label = tk.Label(food_frame, text=f"Fat: {entry.get('fat', 'N/A')}g", bg="lightgray", font=("Arial", 10))
+                fat_label = tk.Label(food_frame, text=f"Fat: {entry.get('fat', 'N/A')}g", width=55, bg="lightgray", font=("Arial", 10))
                 fat_label.pack(anchor="w", padx=10)
 
-                carbs_label = tk.Label(food_frame, text=f"Carbohydrates: {entry.get('carbs', 'N/A')}g", bg="lightgray", font=("Arial", 10))
-                carbs_label.pack(anchor="w", padx=10)
+                carbs_label = tk.Label(food_frame, text=f"Carbohydrates: {entry.get('carbs', 'N/A')}g", width=55, bg="lightgray", font=("Arial", 10))
+                carbs_label.pack(anchor="w", padx=10) 
+                
+                delete_btn = tk.Button(food_frame, text="Delete", command=lambda e=entry: self.delete_food_entry(e["product_name"], date_str), bg="red", fg="white")
+                delete_btn.pack(anchor="e", padx=10)
         else:
             tk.Label(self.food_info_container, text="No food entries found for this date.", font=("Arial", 12)).pack(pady=20)
 
     def get_food_for_day(self, date_str):
         return list(addfood_collection.find({"date": date_str}))
+
+    def delete_food_entry(self, product_name, date):
+        result = addfood_collection.delete_one({"product_name": product_name, "date": date})
+        if result.deleted_count > 0:
+            messagebox.showinfo("Success", f"Product '{product_name}' deleted.")
+            self.show_food_for_day(date)  # Refresh the view
+        else:
+            messagebox.showerror("Error", "Failed to delete product.")
 
     def generate_advice(self):
         advice_list = [
